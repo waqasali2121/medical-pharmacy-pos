@@ -1,0 +1,18 @@
+@import "tailwindcss";
+
+:root { --bg:#f6f8fb; --ink:#14213d; --muted:#667085; --brand:#0f766e; --card:#fff; }
+* { box-sizing:border-box; }
+html,body { margin:0; padding:0; }
+body { background:var(--bg); color:var(--ink); font-family:Arial,Helvetica,sans-serif; }
+button,input,select { font:inherit; }
+.card { background:var(--card); border:1px solid #e6eaf0; border-radius:16px; box-shadow:0 3px 12px rgba(16,24,40,.04); }
+.btn { border-radius:10px; padding:10px 14px; font-weight:700; cursor:pointer; border:1px solid #d8dee8; }
+.btn-primary { background:var(--brand); color:white; border-color:var(--brand); }
+.btn-danger { background:#b42318; color:white; border-color:#b42318; }
+.input { width:100%; border:1px solid #d8dee8; border-radius:10px; padding:10px 12px; outline:none; background:white; }
+.input:focus { border-color:#0f766e; box-shadow:0 0 0 3px rgba(15,118,110,.12); }
+.table { width:100%; border-collapse:collapse; }
+.table th,.table td { padding:11px 12px; border-bottom:1px solid #edf0f4; text-align:left; }
+.badge { display:inline-flex; padding:4px 8px; border-radius:999px; font-size:12px; font-weight:700; }
+.sidebar-link { display:flex; gap:10px; align-items:center; padding:10px 12px; border-radius:10px; color:#475467; }
+.sidebar-link:hover,.sidebar-link.active { background:#e8f5f3; color:#0f766e; }

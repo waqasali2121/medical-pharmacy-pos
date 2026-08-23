@@ -1,0 +1,266 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  MANAGER
+  CASHIER
+}
+
+enum PaymentMethod {
+  CASH
+  CARD
+  BANK
+  MOBILE_WALLET
+  CREDIT
+}
+
+enum SaleStatus {
+  COMPLETED
+  CANCELLED
+  RETURNED
+  PARTIAL_RETURN
+}
+
+enum InventoryTransactionType {
+  PURCHASE
+  SALE
+  SALE_RETURN
+  PURCHASE_RETURN
+  ADJUSTMENT_IN
+  ADJUSTMENT_OUT
+  DAMAGE
+  EXPIRY
+  OPENING_STOCK
+}
+
+model User {
+  id           String      @id @default(cuid())
+  username     String      @unique
+  name         String
+  passwordHash String
+  role         Role        @default(CASHIER)
+  active       Boolean     @default(true)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  sales        Sale[]
+  purchases    Purchase[]
+  auditLogs    AuditLog[]
+}
+
+model Category {
+  id        String     @id @default(cuid())
+  name      String     @unique
+  active    Boolean    @default(true)
+  medicines Medicine[]
+}
+
+model Medicine {
+  id                 String          @id @default(cuid())
+  productId          String          @unique
+  barcode            String?         @unique
+  name               String
+  genericName        String?
+  brandName          String?
+  dosageForm         String?
+  strength           String?
+  manufacturer       String?
+  packSize           String?
+  unit               String          @default("unit")
+  defaultSalePrice   Decimal         @db.Decimal(12,2)
+  defaultPurchasePrice Decimal       @db.Decimal(12,2)
+  mrp                Decimal         @db.Decimal(12,2)
+  taxPercent         Decimal         @db.Decimal(5,2) @default(0)
+  prescriptionRequired Boolean       @default(false)
+  active             Boolean         @default(true)
+  reorderLevel       Int             @default(10)
+  categoryId         String?
+  category           Category?       @relation(fields: [categoryId], references: [id])
+  batches            MedicineBatch[]
+  saleItems          SaleItem[]
+  purchaseItems      PurchaseItem[]
+  inventoryTx        InventoryTransaction[]
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+
+  @@index([name])
+  @@index([genericName])
+}
+
+model Supplier {
+  id          String     @id @default(cuid())
+  companyName String
+  contactName String?
+  phone       String?
+  email       String?
+  address     String?
+  taxNumber   String?
+  active      Boolean    @default(true)
+  purchases   Purchase[]
+  createdAt   DateTime   @default(now())
+}
+
+model Customer {
+  id          String   @id @default(cuid())
+  name       String
+  phone      String?
+  address    String?
+  email      String?
+  notes      String?
+  sales      Sale[]
+  createdAt  DateTime @default(now())
+}
+
+model MedicineBatch {
+  id             String       @id @default(cuid())
+  medicineId     String
+  batchNumber    String
+  manufactureDate DateTime?
+  expiryDate     DateTime
+  purchasePrice  Decimal      @db.Decimal(12,2)
+  salePrice      Decimal      @db.Decimal(12,2)
+  mrp            Decimal      @db.Decimal(12,2)
+  quantity       Int          @default(0)
+  supplierId     String?
+  purchaseId     String?
+  medicine       Medicine     @relation(fields: [medicineId], references: [id])
+  supplier       Supplier?    @relation(fields: [supplierId], references: [id])
+  purchase       Purchase?    @relation(fields: [purchaseId], references: [id])
+  saleItems      SaleItem[]
+  inventoryTx    InventoryTransaction[]
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@unique([medicineId, batchNumber])
+  @@index([expiryDate])
+}
+
+model Sale {
+  id             String        @id @default(cuid())
+  invoiceNumber  String        @unique
+  customerId     String?
+  userId         String
+  subtotal       Decimal       @db.Decimal(12,2)
+  discount       Decimal       @db.Decimal(12,2) @default(0)
+  tax            Decimal       @db.Decimal(12,2) @default(0)
+  total          Decimal       @db.Decimal(12,2)
+  paid           Decimal       @db.Decimal(12,2)
+  balance        Decimal       @db.Decimal(12,2) @default(0)
+  status         SaleStatus    @default(COMPLETED)
+  paymentMethod  PaymentMethod @default(CASH)
+  createdAt      DateTime      @default(now())
+  customer       Customer?     @relation(fields: [customerId], references: [id])
+  user           User          @relation(fields: [userId], references: [id])
+  items          SaleItem[]
+  payments       SalePayment[]
+
+  @@index([createdAt])
+}
+
+model SaleItem {
+  id             String        @id @default(cuid())
+  saleId         String
+  medicineId     String
+  batchId        String
+  quantity       Int
+  unitPrice      Decimal       @db.Decimal(12,2)
+  costPrice      Decimal       @db.Decimal(12,2)
+  discount       Decimal       @db.Decimal(12,2) @default(0)
+  tax            Decimal       @db.Decimal(12,2) @default(0)
+  total          Decimal       @db.Decimal(12,2)
+  sale           Sale          @relation(fields: [saleId], references: [id])
+  medicine       Medicine      @relation(fields: [medicineId], references: [id])
+  batch          MedicineBatch @relation(fields: [batchId], references: [id])
+}
+
+model SalePayment {
+  id       String        @id @default(cuid())
+  saleId   String
+  method   PaymentMethod
+  amount   Decimal       @db.Decimal(12,2)
+  sale     Sale          @relation(fields: [saleId], references: [id])
+  createdAt DateTime     @default(now())
+}
+
+model Purchase {
+  id             String        @id @default(cuid())
+  invoiceNumber  String
+  supplierId     String
+  userId         String
+  total          Decimal      @db.Decimal(12,2)
+  paid           Decimal      @db.Decimal(12,2)
+  balance        Decimal      @db.Decimal(12,2) @default(0)
+  createdAt      DateTime     @default(now())
+  supplier       Supplier     @relation(fields: [supplierId], references: [id])
+  user           User         @relation(fields: [userId], references: [id])
+  items          PurchaseItem[]
+  batches        MedicineBatch[]
+
+  @@index([createdAt])
+}
+
+model PurchaseItem {
+  id             String        @id @default(cuid())
+  purchaseId     String
+  medicineId     String
+  batchNumber    String
+  expiryDate     DateTime
+  quantity       Int
+  purchasePrice  Decimal      @db.Decimal(12,2)
+  salePrice      Decimal      @db.Decimal(12,2)
+  mrp            Decimal      @db.Decimal(12,2)
+  total          Decimal      @db.Decimal(12,2)
+  purchase       Purchase      @relation(fields: [purchaseId], references: [id])
+  medicine       Medicine      @relation(fields: [medicineId], references: [id])
+}
+
+model InventoryTransaction {
+  id             String                    @id @default(cuid())
+  medicineId     String
+  batchId        String
+  type           InventoryTransactionType
+  quantity       Int
+  beforeQty      Int
+  afterQty       Int
+  referenceId    String?
+  reason         String?
+  userId         String?
+  createdAt      DateTime                  @default(now())
+  medicine       Medicine                  @relation(fields: [medicineId], references: [id])
+  batch          MedicineBatch             @relation(fields: [batchId], references: [id])
+  @@index([createdAt])
+  @@index([medicineId])
+}
+
+model Expense {
+  id          String        @id @default(cuid())
+  category    String
+  description String?
+  amount      Decimal       @db.Decimal(12,2)
+  paymentMethod PaymentMethod @default(CASH)
+  createdAt   DateTime      @default(now())
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  action    String
+  entity    String
+  entityId  String?
+  details   String?
+  createdAt DateTime @default(now())
+  user      User?    @relation(fields: [userId], references: [id])
+}
+
+model Setting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  updatedAt DateTime @updatedAt
+}

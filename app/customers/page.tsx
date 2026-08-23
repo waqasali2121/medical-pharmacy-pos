@@ -1,0 +1,2 @@
+import {db} from "@/lib/db";
+export default async function Customers(){const rows=await db.customer.findMany({include:{_count:{select:{sales:true}}},orderBy:{name:"asc"}});return <div className="space-y-6"><h1 className="text-2xl font-black">Customers</h1><div className="card p-5 overflow-x-auto"><table className="table"><thead><tr><th>Name</th><th>Phone</th><th>Invoices</th></tr></thead><tbody>{rows.map(c=><tr key={c.id}><td>{c.name}</td><td>{c.phone||"-"}</td><td>{c._count.sales}</td></tr>)}</tbody></table></div></div>}
