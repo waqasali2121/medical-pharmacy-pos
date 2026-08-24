@@ -1,14 +1,18 @@
 import { getCurrentUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import LoginForm from "./LoginForm";
+import { Heart } from "lucide-react";
 
 export default async function LoginPage() {
   if (await getCurrentUser()) redirect("/dashboard");
-  return <div className="min-h-screen grid place-items-center p-6 bg-slate-100">
-    <div className="card w-full max-w-md p-8">
-      <div className="text-center mb-7">
-        <div className="text-3xl font-black text-teal-700">MediPOS</div>
-        <p className="text-gray-500 mt-2">Medical Store & Pharmacy POS</p>
+  return <div className="login-bg">
+    <div className="login-card">
+      <div className="text-center mb-8">
+        <div className="inline-flex w-12 h-12 rounded-xl bg-teal-500/10 text-teal-600 items-center justify-center mb-4">
+          <Heart size={24} className="fill-teal-500/10" />
+        </div>
+        <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">MediPOS</h1>
+        <p className="text-slate-500 mt-2 text-sm">Medical Store & Pharmacy POS</p>
       </div>
       <LoginForm />
     </div>
