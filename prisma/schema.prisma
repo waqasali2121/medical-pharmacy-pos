@@ -5,7 +5,6 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 enum Role {
@@ -104,6 +103,7 @@ model Supplier {
   taxNumber   String?
   active      Boolean    @default(true)
   purchases   Purchase[]
+  batches     MedicineBatch[]
   createdAt   DateTime   @default(now())
 }
 
