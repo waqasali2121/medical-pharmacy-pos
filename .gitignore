@@ -2,8 +2,10 @@ node_modules/
 .next/
 .env
 .env.local
+.env.vercel
 app/generated/
 *.log
 .DS_Store
+check-db.ts
 
 .vercel
